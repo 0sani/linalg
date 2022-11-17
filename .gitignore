@@ -1,0 +1,4 @@
+tests.cpp
+*hpp.gch
+.vscode
+*.out
