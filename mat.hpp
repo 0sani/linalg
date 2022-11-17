@@ -22,4 +22,11 @@ public:
 		assert(row < _rows && col < _cols);
 		return _contents[row*_rows + col];
 	}
+
+	int operator*=(int scalar) {
+		for (size_t i = 0; i < _size; i++)
+			_contents[i] *= scalar;
+		return scalar;
+	}
+
 };
