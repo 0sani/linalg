@@ -1,12 +1,22 @@
 #include <iostream>
 #include <cassert>
+#include <array>
 
 template<typename T, size_t rows, size_t cols>
 class Matrix {
 private:
     constexpr static size_t _size = rows * cols;
-	T _contents[cols][rows];
+	T _contents[_size]{};
 public:
+    Matrix() = default;
+
+    //Diagonal Matrix Constructor
+    template <std::enable_if_t<rows == cols, bool> = true>
+    Matrix(const std::array<T, rows>& arr) { 
+        for (size_t i = 0; i < rows; ++i)
+            _contents[(i * rows) + i] = arr[i];
+    }
+
 	T& operator[](size_t index) {
 		assert(index < _size);
 		return _contents[index];
@@ -16,7 +26,6 @@ public:
 		assert(x < rows && y < cols);
 		return _contents[x*rows + y];
 	}
-
 
 	Matrix& operator*=(T scalar) {
 		for (size_t i = 0; i < _size; i++)
@@ -75,5 +84,4 @@ public:
 		}
 		return res;
 	}
-
 };
