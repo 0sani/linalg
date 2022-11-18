@@ -1,18 +1,21 @@
 #include <iostream>
+#include <cassert>
 #include <array>
-
 
 template<typename T, size_t rows, size_t cols>
 class Matrix {
 private:
-	T* _contents;
-	constexpr static size_t _rows = rows;
-	constexpr static size_t _cols = cols;
-	constexpr static size_t _size = rows*cols;
+    constexpr static size_t _size = rows * cols;
+	T _contents[_size]{};
 public:
-	Matrix() {
-		_contents = new T[_size];
-	}
+    Matrix() = default;
+
+    //Diagonal Matrix Constructor
+    template <std::enable_if_t<rows == cols, bool> = true>
+    Matrix(const std::array<T, rows>& arr) { 
+        for (size_t i = 0; i < rows; ++i)
+            _contents[(i * rows) + i] = arr[i];
+    }
 
 	Matrix(const std::array<T, _size>& data) {
 		_contents = new T[_size];
@@ -36,11 +39,10 @@ public:
 		return _contents[index];
 	}
 
-	T& operator()(size_t row, size_t col) {
-		assert(row < _rows && col < _cols);
-		return _contents[row*_rows + col];
+	T& operator()(size_t x, size_t y) {
+		assert(x < rows && y < cols);
+		return _contents[x*rows + y];
 	}
-
 
 	Matrix& operator*=(T scalar) {
 		for (size_t i = 0; i < _size; i++)
@@ -83,11 +85,10 @@ public:
 		return res;
 	}
 
-	template<size_t R, size_t C>
-	Matrix<T, _rows, C> operator*(Matrix<T, R, C> other) {
-		assert(cols == R);
-		Matrix<T, _rows, C> res;
-		for (size_t i = 0; i < _rows; i++) {
+	template<size_t C>
+	Matrix operator*(Matrix<T, cols, C> other) {
+		Matrix<T, rows, C> res;
+		for (size_t i = 0; i < rows; i++) {
 			for (size_t j = 0; j < C; j++) {
 				T sum = 0;
 				for (size_t k = 0; k < _rows; k++){
@@ -101,6 +102,7 @@ public:
 		return res;
 	}
 
+
 	friend std::ostream &operator<<(std::ostream &output, Matrix<T, rows, cols> mat) {
 	for (size_t i = 0; i < rows; i++) {
 		for (size_t j = 0; j < cols; j++) {
@@ -110,5 +112,4 @@ public:
 	}
 	return output;
 }
-
 };
