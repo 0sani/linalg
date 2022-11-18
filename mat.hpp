@@ -5,12 +5,8 @@
 template<typename T, size_t rows, size_t cols>
 class Matrix {
 private:
-	T* _contents;
+	T _contents[cols][rows];
 public:
-	Matrix() {
-		_contents = new T[_size];
-	}
-
 	T& operator[](size_t index) {
 		assert(index < _size);
 		return _contents[index];
