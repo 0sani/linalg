@@ -1,10 +1,10 @@
 #include <iostream>
-#include <array>
-
+#include <cassert>
 
 template<typename T, size_t rows, size_t cols>
 class Matrix {
 private:
+    constexpr static size_t _size = rows * cols;
 	T _contents[cols][rows];
 public:
 	T& operator[](size_t index) {
@@ -12,9 +12,9 @@ public:
 		return _contents[index];
 	}
 
-	T& operator()(size_t row, size_t col) {
-		assert(row < _rows && col < _cols);
-		return _contents[row*_rows + col];
+	T& operator()(size_t x, size_t y) {
+		assert(x < rows && y < cols);
+		return _contents[x*rows + y];
 	}
 
 
