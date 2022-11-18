@@ -17,6 +17,23 @@ public:
             _contents[(i * rows) + i] = arr[i];
     }
 
+	Matrix(const std::array<T, _size>& data) {
+		_contents = new T[_size];
+		for (size_t i = 0; i < _size; i++) {
+			_contents[i] = data[i];
+		}
+	}
+	
+	// Diagonal Matrix Constructor
+	Matrix(const std::array<T, std::min(rows, cols)>& data) {
+		_contents = new T[_size];
+		for (size_t i = 0; i < std::min(rows, cols); i++) {
+			_contents[i*(cols+1)]= data[i];
+		}
+	}
+
+	
+
 	T& operator[](size_t index) {
 		assert(index < _size);
 		return _contents[index];
@@ -74,9 +91,9 @@ public:
 		for (size_t i = 0; i < rows; i++) {
 			for (size_t j = 0; j < C; j++) {
 				T sum = 0;
-				for (size_t k = 0; k < rows; k++){
+				for (size_t k = 0; k < _rows; k++){
 
-					sum += _contents[i*rows+k] * other(k, j);
+					sum += _contents[i*_rows+k] * other(k, j);
 				}
 				res(i,j) = sum;
 			}
@@ -84,4 +101,15 @@ public:
 		}
 		return res;
 	}
+
+
+	friend std::ostream &operator<<(std::ostream &output, Matrix<T, rows, cols> mat) {
+	for (size_t i = 0; i < rows; i++) {
+		for (size_t j = 0; j < cols; j++) {
+			output << mat(i,j) << " ";
+		}
+		output << std::endl;
+	}
+	return output;
+}
 };
