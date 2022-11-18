@@ -12,19 +12,19 @@ public:
     Matrix() = default;
 
 	Matrix(const std::array<T, _size>& arr) { memcpy(_contents, arr.data(), _size * sizeof(T)); }
-
-    // Diagonal Matrix Constructor
-    Matrix(const std::array<T, rows>& arr) { 
-        for (size_t i = 0; i < rows; ++i) {
-			_contents[(i * rows) + i] = arr[i];
-		}
-    }
 	
-	// Psuedo-Diagonal Matrix Constructor
-	template <size_t dim, std::enable_if_t<(dim == std::min(rows, cols)) && (rows != cols), bool> = true>  
+	// Diagonal Matrix Constructor
+	template <size_t dim, std::enable_if_t<dim == std::min(rows, cols), bool> = true>  
 	Matrix(const std::array<T, dim>& arr) {
 		for (size_t i = 0; i < dim; ++i) {
-			_contents[i * (cols + 1)]= arr[i];
+			if constexpr (rows == cols)
+			{
+				_contents[(i * dim) + i] = arr[i];
+			}
+			else
+			{
+				_contents[i * (cols + 1)] = arr[i];
+			}
 		}
 	}
 
