@@ -59,9 +59,8 @@ public:
 		return res;
 	}
 
-	template<size_t R, size_t C>
-	Matrix operator*(Matrix<T, R, C> other) {
-		assert(cols == R);
+	template<size_t C>
+	Matrix operator*(Matrix<T, cols, C> other) {
 		Matrix<T, rows, C> res;
 		for (size_t i = 0; i < rows; i++) {
 			for (size_t j = 0; j < C; j++) {
