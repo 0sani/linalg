@@ -85,11 +85,9 @@ public:
 				}
 				res(i,j) = sum;
 			}
-			
 		}
 		return res;
 	}
-
 
 	friend std::ostream &operator<<(std::ostream &output, Matrix<T, rows, cols> mat) {
 	for (size_t i = 0; i < rows; i++) {
@@ -99,5 +97,5 @@ public:
 		output << std::endl;
 	}
 	return output;
-}
+	}
 };
