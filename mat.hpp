@@ -7,12 +7,13 @@ template<typename T, size_t rows, size_t cols>
 class Matrix {
 private:
     constexpr static size_t _size = rows * cols;
+	size_t _pivots = 0;
 	T _contents[_size]{0};
 public:
 	Matrix() = default;
 
 	//Diagonal Matrix Constructor
-	Matrix(const std::array<T, std::min(rows, cols)>& arr) { 
+	explicit Matrix(const std::array<T, std::min(rows, cols)>& arr) { 
 		for (size_t i = 0; i < std::min(rows, cols); ++i)
 			_contents[(i * cols) + i] = arr[i];
 	}
@@ -22,6 +23,7 @@ public:
 			_contents[i] = data[i];
 		}
 	}
+
 
 	T& operator[](size_t index) {
 		assert(index < _size);
@@ -130,6 +132,10 @@ public:
 
 
 	Matrix RREF() {
+		// Using Guassian Elimination so not 100% numerically stable
+		// Partial pivoting used though less likely to be unstable
+		// If something breaks in 6 months then it might be here
+
 		Matrix<T, rows, cols> res = *this;
 		int p_row = 0;
 		int p_col = 0;
@@ -170,6 +176,7 @@ public:
 			for (size_t i = 0; i < cols; ++i) {
 				if (res(p_row, i)) {
 					p_col = i;
+					++res._pivots;
 					break;
 				}
 			}
@@ -185,8 +192,18 @@ public:
 			p_row--;
 			p_col--;
 		}
-
+		
 		return res;
 	}
 
+	size_t rank() {
+		if (_pivots == 0) {
+			return RREF()._pivots;
+		}
+		return _pivots;
+	}
+	
+	size_t nullity() {
+		return cols - rank();
+	}
 };
