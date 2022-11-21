@@ -1,4 +1,5 @@
-#include <iostream>
+#pragma once
+
 #include <iostream>
 #include <cassert>
 #include <array>
@@ -55,7 +56,7 @@ public:
     Vec operator+(Vec<T, size> other) {
         Vec<T, size> res;
         for (size_t i = 0; i < size; ++i) {
-            res[i] = _contents[i] + other[i]
+            res[i] = _contents[i] + other[i];
         }
         return res;
     }
@@ -63,7 +64,7 @@ public:
     Vec operator-(Vec<T, size> other) {
         Vec<T, size> res;
         for (size_t i = 0; i < size; ++i) {
-            res[i] = _contents[i] - other[i]
+            res[i] = _contents[i] - other[i];
         }
         return res;
     }
@@ -72,9 +73,21 @@ public:
     T& operator*(Vec<T, size> other) {
         T total = 0;
         for (size_t i = 0; i < size; ++i) {
-            total +=  _contents[i] * other[i]
+            total +=  _contents[i] * other[i];
         }
 
+    }
+
+    friend std::ostream &operator<<(std::ostream &output, Vec<T, size> v) {
+        output << "[";
+        for (size_t i = 0; i < size; ++i) {
+            output << v[i];
+            if (i != size-1)
+                output << " ";
+            else
+                output << "]";
+        }
+        return output;
     }
 
 };

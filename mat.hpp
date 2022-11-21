@@ -1,7 +1,10 @@
+#pragma once
+
 #include <iostream>
 #include <cassert>
 #include <array>
 #include <cmath>
+#include "basis.hpp"
 
 template<typename T, size_t rows, size_t cols>
 class Matrix {
@@ -24,13 +27,32 @@ public:
 		}
 	}
 
+	explicit Matrix(const Basis<T, rows>& basis) {
+		size_t size = basis.size();
+		for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < size; ++j) {
+                _contents[i*cols+j] = basis[j][i];
+            }
+        }
+	}
+
 
 	T& operator[](size_t index) {
 		assert(index < _size);
 		return _contents[index];
 	}
 
+	const T& operator[](size_t index) const {
+		assert(index < _size);
+		return _contents[index];
+	}
+
 	T& operator()(size_t row, size_t col) {
+		assert(row < rows && col < cols);
+		return _contents[row*cols + col];
+	}
+
+	const T& operator()(size_t row, size_t col) const{
 		assert(row < rows && col < cols);
 		return _contents[row*cols + col];
 	}
@@ -82,8 +104,7 @@ public:
 		for (size_t i = 0; i < rows; i++) {
 			for (size_t j = 0; j < C; j++) {
 				T sum = 0;
-				for (size_t k = 0; k < rows; k++){
-
+				for (size_t k = 0; k < cols; k++){
 					sum += _contents[i*cols+k] * other(k, j);
 				}
 				res(i,j) = sum;
