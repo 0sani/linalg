@@ -6,36 +6,43 @@
 #include <cmath>
 #include "basis.hpp"
 
-template<typename T, size_t rows, size_t cols>
+template<typename T>
 class Matrix {
 private:
-    constexpr static size_t _size = rows * cols;
+	const size_t _rows;
+	const size_t _cols;
+    const size_t _size = _rows * _cols;
 	size_t _pivots = 0;
-	T _contents[_size]{0};
+	T* _contents;
 public:
-	Matrix() = default;
 
-	//Diagonal Matrix Constructor
-	explicit Matrix(const std::array<T, std::min(rows, cols)>& arr) { 
-		for (size_t i = 0; i < std::min(rows, cols); ++i)
-			_contents[(i * cols) + i] = arr[i];
+	Matrix(size_t rows, size_t cols)
+		: _rows {rows}, _cols{cols} {
+		_contents = new T[_size];
 	}
 
-	explicit Matrix(const std::array<T, _size>& data) {
-		for (size_t i = 0; i < _size; i++) {
-			_contents[i] = data[i];
+	Matrix(size_t rows, size_t cols, const std::vector<T>& arr)
+		: _rows {rows}, _cols{cols} {
+		
+		assert(arr.size() == _size || arr.size() == std::min(_rows, _cols));
+		_contents = new T[_size];
+		
+		if (arr.size() == _size) {
+			for (size_t i = 0; i < _size; ++i)
+				_contents[i] = arr[i];
+		} else {
+			for (size_t i = 0; i < arr.size(); ++i)
+				_contents[i*(_cols + 1)] = arr[i];
 		}
 	}
 
-	explicit Matrix(const Basis<T, rows>& basis) {
-		size_t size = basis.size();
-		for (size_t i = 0; i < rows; ++i) {
-            for (size_t j = 0; j < size; ++j) {
-                _contents[i*cols+j] = basis[j][i];
-            }
-        }
+	Matrix operator=(const Matrix& arr) {
+		assert(arr._rows == _rows && arr._cols == _cols);
+		for (size_t i = 0; i < _size; i++) {
+			_contents[i] = arr[i];
+		}
+		return *this;
 	}
-
 
 	T& operator[](size_t index) {
 		assert(index < _size);
@@ -48,64 +55,65 @@ public:
 	}
 
 	T& operator()(size_t row, size_t col) {
-		assert(row < rows && col < cols);
-		return _contents[row*cols + col];
+		assert(row < _rows && col < _cols);
+		return _contents[row*_cols + col];
 	}
 
 	const T& operator()(size_t row, size_t col) const{
-		assert(row < rows && col < cols);
-		return _contents[row*cols + col];
+		assert(row < _rows && col < _cols);
+		return _contents[row*_cols + col];
 	}
 
 	Matrix& operator*=(T scalar) {
-		for (size_t i = 0; i < _size; i++)
+		for (size_t i = 0; i < _size; ++i)
 			_contents[i] *= scalar;
 		return *this;
 	}
 
-
-	Matrix& operator+=(Matrix<T, rows, cols> other) {
-		for (size_t i = 0; i < _size; i++)
-			_contents[i] += other[i];
-		return *this;
-	}
-
-	Matrix& operator-=(Matrix<T, rows, cols> other) {
-		for (size_t i = 0; i < _size; i++)
-			_contents[i] -= other[i];
-		return *this;
-	}
-
 	Matrix& operator/=(T scalar) {
-		for (size_t i = 0; i < _size; i++)
+		for (size_t i = 0; i < _size; ++i)
 			_contents[i] /= scalar;
 		return *this;
 	}
 
-	Matrix operator+(Matrix<T, rows, cols> other) {
-		Matrix<T, rows, cols> res;
-		for (size_t i = 0; i < _size; i++) {
+	Matrix& operator+=(Matrix other) {
+		assert(other._rows == _rows && other._cols == _cols);
+		for (size_t i = 0; i < _size; ++i)
+			_contents[i] += other[i];
+		return *this;
+	}
+
+	Matrix& operator-=(Matrix other) {
+		assert(other._rows == _rows && other._cols == _cols);
+		for (size_t i = 0; i < _size; ++i)
+			_contents[i] -= other[i];
+		return *this;
+	}
+
+	Matrix operator+(Matrix other) {
+		Matrix res(_rows, _cols);
+		for (size_t i = 0; i < _size; ++i) {
 			res[i] = _contents[i] + other[i];
 		}
 		return res;
 	}
 
-	Matrix operator-(Matrix<T, rows, cols> other) {
-		Matrix<T, rows, cols> res;
-		for (size_t i = 0; i < _size; i++) {
+	Matrix operator-(Matrix other) {
+		Matrix res(_rows, _cols);
+		for (size_t i = 0; i < _size; ++i) {
 			res[i] = _contents[i] - other[i];
 		}
 		return res;
 	}
 
-	template<size_t C>
-	Matrix<T, rows, C> operator*(Matrix<T, cols, C> other) {
-		Matrix<T, rows, C> res;
-		for (size_t i = 0; i < rows; i++) {
-			for (size_t j = 0; j < C; j++) {
+	Matrix operator*(Matrix other) {
+		assert(_cols == other._rows);
+		Matrix res(_rows, other._cols);
+		for (size_t i = 0; i < _rows; ++i) {
+			for (size_t j = 0; j < other._cols; j++) {
 				T sum = 0;
-				for (size_t k = 0; k < cols; k++){
-					sum += _contents[i*cols+k] * other(k, j);
+				for (size_t k = 0; k < _cols; k++){
+					sum += _contents[i*_cols+k] * other(k, j);
 				}
 				res(i,j) = sum;
 			}
@@ -113,9 +121,9 @@ public:
 		return res;
 	}
 
-	friend std::ostream &operator<<(std::ostream &output, Matrix<T, rows, cols> mat) {
-	for (size_t i = 0; i < rows; i++) {
-		for (size_t j = 0; j < cols; j++) {
+	friend std::ostream &operator<<(std::ostream &output, Matrix mat) {
+	for (size_t i = 0; i < mat._rows; ++i) {
+		for (size_t j = 0; j < mat._cols; j++) {
 			output << mat(i,j) << "\t";
 		}
 		output << std::endl;
@@ -124,29 +132,29 @@ public:
 	}
 
 	Matrix row_interchange(size_t a, size_t b) {
-		assert(a < rows && b < rows);
+		assert(a < _rows && b < _rows);
 		if (a == b) return *this;
 		T temp;
-		for (size_t i = 0; i < cols; i++) {
-			temp = _contents[a*cols + i];
-			_contents[a*cols + i] = _contents[b*cols + i];
-			_contents[b*cols + i] = temp;
+		for (size_t i = 0; i <_cols; ++i) {
+			temp = _contents[a*_cols + i];
+			_contents[a*_cols + i] = _contents[b*_cols + i];
+			_contents[b*_cols + i] = temp;
 		}
 		return *this;
 	}
 
 	Matrix row_scaling(size_t row, T scalar) {
-		assert(row < rows);
-		for (size_t i = 0; i < cols; ++i) {
-			_contents[row*cols + i] *= scalar;
+		assert(row <_rows);
+		for (size_t i = 0; i <_cols; ++i) {
+			_contents[row*_cols + i] *= scalar;
 		}
 		return *this;
 	}
 
 	Matrix row_replacement(size_t a, size_t b, T scalar) {
-		assert(a < rows && b < rows && a != b);
-		for (size_t i = 0; i < cols; ++i) {
-			_contents[a*cols+i] -= _contents[b*cols+i] * scalar;
+		assert(a <_rows && b <_rows && a != b);
+		for (size_t i = 0; i <_cols; ++i) {
+			_contents[a*_cols+i] -= _contents[b*_cols+i] * scalar;
 		}
 		return *this;
 	}
@@ -157,17 +165,18 @@ public:
 		// Partial pivoting used though less likely to be unstable
 		// If something breaks in 6 months then it might be here
 
-		Matrix<T, rows, cols> res = *this;
+		Matrix res(_rows, _cols);
+		res = *this;
 		int p_row = 0;
 		int p_col = 0;
 
 		// Forward phase
-		while (p_row < rows && p_col < cols) {			
+		while (p_row <_rows && p_col <_cols) {			
 			// find k-th pivot
 			// argmax
 			size_t i_max = 0;
 			T highest = 0;
-			for (size_t i = p_row; i < rows; ++i) {
+			for (size_t i = p_row; i <_rows; ++i) {
 				if (std::abs(res(i, p_col)) >= highest) {
 					highest = std::abs(res(i, p_col));
 					i_max = i;
@@ -179,7 +188,7 @@ public:
 			} else {
 				res.row_interchange(p_row, i_max);
 
-				for (size_t i = p_row + 1; i < rows; ++i) {
+				for (size_t i = p_row + 1; i <_rows; ++i) {
 					T f = res(i, p_col) / res(p_row, p_col);
 					res.row_replacement(i, p_row, f);
 				}
@@ -189,12 +198,12 @@ public:
 		}
 
 		// Backward phase
-		p_row = rows - 1;
-		p_col = cols - 1;
+		p_row =_rows - 1;
+		p_col =_cols - 1;
 
 		while (p_row >= 0 && p_col >= 0) {
 			// find pivot col
-			for (size_t i = 0; i < cols; ++i) {
+			for (size_t i = 0; i <_cols; ++i) {
 				if (res(p_row, i)) {
 					p_col = i;
 					++res._pivots;
@@ -225,6 +234,8 @@ public:
 	}
 	
 	size_t nullity() {
-		return cols - rank();
+		return _cols - rank();
 	}
+
+
 };

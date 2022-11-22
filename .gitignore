@@ -2,3 +2,5 @@ tests.cpp
 *hpp.gch
 .vscode
 *.out
+planning.md
+mat_d.hpp
