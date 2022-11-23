@@ -4,7 +4,6 @@
 #include <cassert>
 #include <array>
 #include <cmath>
-#include "basis.hpp"
 
 template<typename T>
 class Matrix {
@@ -44,6 +43,14 @@ public:
 		return *this;
 	}
 
+	bool operator==(const Matrix& arr) {
+		assert(arr._rows == _rows && arr._cols == _cols);
+		for (size_t i = 0; i < _size; i++) {
+			if (_contents[i] != arr[i]) return false;
+		}
+		return true;
+	}
+
 	T& operator[](size_t index) {
 		assert(index < _size);
 		return _contents[index];
@@ -76,21 +83,21 @@ public:
 		return *this;
 	}
 
-	Matrix& operator+=(Matrix other) {
+	Matrix& operator+=(Matrix<T> other) {
 		assert(other._rows == _rows && other._cols == _cols);
 		for (size_t i = 0; i < _size; ++i)
 			_contents[i] += other[i];
 		return *this;
 	}
 
-	Matrix& operator-=(Matrix other) {
+	Matrix& operator-=(Matrix<T> other) {
 		assert(other._rows == _rows && other._cols == _cols);
 		for (size_t i = 0; i < _size; ++i)
 			_contents[i] -= other[i];
 		return *this;
 	}
 
-	Matrix operator+(Matrix other) {
+	Matrix operator+(Matrix<T> other) {
 		Matrix res(_rows, _cols);
 		for (size_t i = 0; i < _size; ++i) {
 			res[i] = _contents[i] + other[i];
@@ -98,7 +105,7 @@ public:
 		return res;
 	}
 
-	Matrix operator-(Matrix other) {
+	Matrix operator-(Matrix<T> other) {
 		Matrix res(_rows, _cols);
 		for (size_t i = 0; i < _size; ++i) {
 			res[i] = _contents[i] - other[i];
@@ -106,7 +113,7 @@ public:
 		return res;
 	}
 
-	Matrix operator*(Matrix other) {
+	Matrix operator*(Matrix<T> other) {
 		assert(_cols == other._rows);
 		Matrix res(_rows, other._cols);
 		for (size_t i = 0; i < _rows; ++i) {
@@ -164,6 +171,9 @@ public:
 		// Using Guassian Elimination so not 100% numerically stable
 		// Partial pivoting used though less likely to be unstable
 		// If something breaks in 6 months then it might be here
+
+		// Update two days later:
+		// It is numerically unstable :D
 
 		Matrix res(_rows, _cols);
 		res = *this;

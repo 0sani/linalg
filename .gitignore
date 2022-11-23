@@ -4,3 +4,4 @@ tests.cpp
 *.out
 planning.md
 mat_d.hpp
+tests.hpp
