@@ -13,6 +13,9 @@ private:
     const size_t _size = _rows * _cols;
 	size_t _pivots = 0;
 	T* _contents;
+
+	// not sure where to put it but for floating point errors
+	double epsilon = 1e-10;
 public:
 
 	Matrix(size_t rows, size_t cols)
@@ -46,7 +49,9 @@ public:
 	bool operator==(const Matrix& arr) {
 		assert(arr._rows == _rows && arr._cols == _cols);
 		for (size_t i = 0; i < _size; i++) {
-			if (_contents[i] != arr[i]) return false;
+			if (std::abs(_contents[i] - arr[i]) > epsilon) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -205,6 +210,11 @@ public:
 				++p_row;
 				++p_col;
 			}
+		}
+
+		// zero any potential floating point errors
+		for (size_t i = 0; i < res._size; ++i) {
+			if (res[i] < epsilon) res[i] = 0;
 		}
 
 		// Backward phase
