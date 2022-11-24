@@ -4,6 +4,7 @@
 #include <cassert>
 #include <array>
 #include <cmath>
+#include <limits>
 
 template<typename T>
 class Matrix {
@@ -15,7 +16,7 @@ private:
 	T* _contents;
 
 	// not sure where to put it but for floating point errors
-	double epsilon = 1e-10;
+	T epsilon = std::numeric_limits<T>::epsilon();
 public:
 
 	Matrix(size_t rows, size_t cols)
@@ -49,11 +50,16 @@ public:
 	bool operator==(const Matrix& arr) {
 		assert(arr._rows == _rows && arr._cols == _cols);
 		for (size_t i = 0; i < _size; i++) {
-			if (std::abs(_contents[i] - arr[i]) > epsilon) {
+			// compensate for floating point errors
+			if (std::fabs(_contents[i] - arr[i]) > epsilon * std::fabs(_contents[i] + arr[i]) * 2) {
 				return false;
 			}
 		}
 		return true;
+	}
+
+	bool operator!=(const Matrix& arr) {
+		return !(*this==arr);
 	}
 
 	T& operator[](size_t index) {
@@ -211,10 +217,12 @@ public:
 				++p_col;
 			}
 		}
-
 		// zero any potential floating point errors
 		for (size_t i = 0; i < res._size; ++i) {
-			if (res[i] < epsilon) res[i] = 0;
+			T x = res[i];
+			if (std::fabs(x) <= 1e-12) {
+				res[i] = 0;
+			}
 		}
 
 		// Backward phase
@@ -241,6 +249,14 @@ public:
 			}
 			p_row--;
 			p_col--;
+		}
+
+		// zero any potential floating point errors
+		for (size_t i = 0; i < res._size; ++i) {
+			T x = res[i];
+			if (std::fabs(x) < 1e-12) {
+				res[i] = 0;
+			}
 		}
 		
 		return res;
