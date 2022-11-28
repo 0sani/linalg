@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cassert>
 #include <array>
+#include <vector>
 #include <cmath>
 #include <limits>
 
@@ -18,7 +19,7 @@ public:
 	const size_t cols;
     const size_t size = rows * cols;
 	size_t _pivots = 0;
-	std::array<size_t, cols> pivot_cols;
+	std::vector<size_t> pivot_cols;
 
 	Matrix(size_t rows, size_t cols)
 		: rows {rows}, cols{cols} {
@@ -189,13 +190,32 @@ public:
 
 	size_t rank() {
 		if (_pivots == 0) {
-			return RREF(this)._pivots;
+			return RREF(*this)._pivots;
 		}
 		return _pivots;
 	}
 	
 	size_t nullity() {
 		return cols - rank();
+	}
+
+	void normalize_col(size_t col) {
+		assert(col < cols);
+		T norm = 0;
+		for (size_t i = 0; i < rows; ++i) {
+			norm += std::pow(_contents[i*cols + col], 2);
+		}
+		norm = std::sqrt(norm);
+		for (size_t i = 0; i < rows; ++i) {
+			_contents[i*cols + col] = _contents[i*cols + col] / norm;
+		}
+	}
+
+	// Normalizes the current matrix
+	void normalize() {
+		for (size_t i = 0; i < cols; ++i) {
+			normalize_col(i);
+		}
 	}
 
 };
@@ -261,7 +281,7 @@ Matrix<T> RREF(const Matrix<T>& mat) {
 			if (res(p_row, i)) {
 				p_col = i;
 				++res._pivots;
-				res.pivot_cols[i] = 1;
+				res.pivot_cols.push_back(i);
 				break;
 			}
 		}
