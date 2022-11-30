@@ -187,6 +187,14 @@ public:
 		return *this;
 	}
 
+	Matrix col_replacement(size_t a, size_t b, T scalar) {
+		assert(a < cols && b < cols);
+		for (size_t i = 0; i < rows; ++i) {
+			_contents[i*cols+a] -= _contents[i*cols+b] * scalar;
+		}
+		return *this;
+	}
+
 
 	size_t rank() {
 		if (_pivots == 0) {
@@ -199,13 +207,23 @@ public:
 		return cols - rank();
 	}
 
+	T dot_cols(size_t a, size_t b) {
+		assert(a < cols && b < cols);
+		T sum = 0;
+		for (size_t i = 0; i < rows; ++i) {
+			sum += _contents[i*cols + a] * _contents[i*cols + b];
+		}
+		return sum;
+	}
+
+	T col_magnitude(size_t col) {
+		assert(col < cols);
+		return std::sqrt(dot_cols(col, col));
+	}
+
 	void normalize_col(size_t col) {
 		assert(col < cols);
-		T norm = 0;
-		for (size_t i = 0; i < rows; ++i) {
-			norm += std::pow(_contents[i*cols + col], 2);
-		}
-		norm = std::sqrt(norm);
+		T norm = col_magnitude(col);
 		for (size_t i = 0; i < rows; ++i) {
 			_contents[i*cols + col] = _contents[i*cols + col] / norm;
 		}
@@ -216,6 +234,31 @@ public:
 		for (size_t i = 0; i < cols; ++i) {
 			normalize_col(i);
 		}
+	}
+
+	// Orthogonalizes the current matrix using stable Graham-Schmidt Process
+	void orthogonalize() {
+		// Ensure matrix is a basis
+		assert(rank() == cols);
+
+		for (size_t j = 0; j < cols; ++j) {
+			// create u_j
+			normalize_col(j);
+			for (size_t k = j+1; k < cols; ++k) {
+				col_replacement(k,j,dot_cols(k,j));
+			}
+		}
+	}
+
+	bool is_orthogonal() {
+		for (size_t i = 0; i < cols-1; ++i) {
+			for (size_t j = i+1; j < cols; ++j) {
+				if (std::fabs(col_magnitude(i)-1) > 1e-12 ||  std::fabs(dot_cols(i,j)) > 1e-12) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 };
