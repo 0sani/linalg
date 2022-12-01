@@ -36,8 +36,13 @@ public:
 			for (size_t i = 0; i < size; ++i)
 				_contents[i] = arr[i];
 		} else {
-			for (size_t i = 0; i < arr.size(); ++i)
-				_contents[i*(cols + 1)] = arr[i];
+			for (size_t i = 0; i < size; ++i) {
+				if (i % cols == i / rows) {
+					_contents[i] = arr[i%cols];
+				} else {
+					_contents[i] = 0;
+				}
+			}
 		}
 	}
 
@@ -149,6 +154,14 @@ public:
 		return res;
 	}
 
+	void round() {
+		for (size_t i = 0; i < size; ++i) {
+			if (std::fabs(_contents[i]) < 1e-12) {
+				_contents[i] = 0;
+			}
+		}
+	}
+
 	friend std::ostream &operator<<(std::ostream &output, Matrix mat) {
 	for (size_t i = 0; i < mat.rows; ++i) {
 		for (size_t j = 0; j < mat.cols; j++) {
@@ -157,6 +170,19 @@ public:
 		output << std::endl;
 	}
 	return output;
+	}
+
+	T determinant() {
+		if (is_lower_triangular() || is_upper_triangular()) {
+			// can do this since triangular matrices must be square
+			T res = 1;
+			for (size_t i = 0; i < rows; ++i) {
+				res *= _contents[i*(cols+1)];
+			} 
+			return res;
+		}
+		// TODO Add proper determinant function
+		return -1;
 	}
 
 	Matrix row_interchange(size_t a, size_t b) {
@@ -261,6 +287,26 @@ public:
 		return true;
 	}
 
+	bool is_upper_triangular() {
+		if (rows != cols) return false;
+		for (size_t i = 0; i < rows; ++i) {
+			for (size_t j = 0; j < i; ++j) {
+				if (_contents[i*cols + j]) return false;
+			}
+		}
+		return true;
+	}
+
+	bool is_lower_triangular() {
+		if (rows != cols) return false;
+		for (size_t i = 0; i < rows; ++i) {
+			for (size_t j = i+1; j < rows; ++j) {
+				if (_contents[i*cols + j]) return false;
+			}
+		}
+		return true;
+	}
+
 };
 
 template<typename T>
@@ -342,14 +388,21 @@ Matrix<T> RREF(const Matrix<T>& mat) {
 	}
 
 	// zero any potential floating point errors
-	for (size_t i = 0; i < res.size; ++i) {
-		T x = res[i];
-		if (std::fabs(x) < 1e-12) {
-			res[i] = 0;
-		}
-	}
+	res.round();
 	
 	return res;
 }
 
-
+template<typename T>
+Matrix<T> transpose(const Matrix<T>& mat) {
+	Matrix<T> res(mat.cols, mat.rows);
+	for (size_t i = 0; i < mat.rows; ++i)
+	{
+		for (size_t j = 0; j < mat.cols; ++j)
+		{
+			res(j,i) = mat(i, j);
+		}
+		
+	}
+	return res;
+}
